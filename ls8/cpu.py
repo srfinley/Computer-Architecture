@@ -74,23 +74,24 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        running = True
-        while running:
-            # self.trace()
+        while True:
             IR = self.ram_read(self.pc)
-            # TODO: something clever with extracting bits from IR
+
+            # first two bits are the number of args
+            # pc will advance by that much plus one
+            advance = (IR >> 6) + 1
+
+            # if these aren't used, they won't be called
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
-            # print(IR, operand_a, operand_b)
 
             if IR == 1:  # HLT
-                running = False
+                break
 
-            if IR == 130:  # LDI
+            elif IR == 130:  # LDI
                 self.ram_write(operand_a, operand_b)
-                self.pc += 3
-                # print(self.ram[self.pc])
+                self.pc += advance
 
             elif IR == 71:  # PRN
                 print(self.ram_read(operand_a))
-                self.pc += 2
+                self.pc += advance
