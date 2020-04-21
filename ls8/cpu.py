@@ -10,6 +10,10 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = 0
+
+        self.HLT = 1
+        self.LDI = 130
+        self.PRN = 71
         
 
     def load(self):
@@ -85,13 +89,16 @@ class CPU:
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
 
-            if IR == 1:  # HLT
+            if IR == self.HLT:
+                # halt
                 break
 
-            elif IR == 130:  # LDI
-                self.ram_write(operand_a, operand_b)
+            elif IR == self.LDI:
+                # write a value to memory
+                self.reg[operand_a] = operand_b
                 self.pc += advance
 
-            elif IR == 71:  # PRN
-                print(self.ram_read(operand_a))
+            elif IR == self.PRN:
+                # print value
+                print(self.reg[operand_a])
                 self.pc += advance
