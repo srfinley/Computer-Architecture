@@ -12,8 +12,10 @@ class CPU:
         self.pc = 0
 
         self.HLT = 1
-        self.LDI = 130
-        self.PRN = 71
+
+        self.branchtable = {}
+        self.branchtable[130] = self.LDI
+        self.branchtable[71] = self.PRN
         
 
     def load(self):
@@ -76,6 +78,12 @@ class CPU:
         """Writes the Memory Data Register to the Memory Address Register"""
         self.ram[MAR] = MDR
 
+    def PRN(self, address, _):
+        print(self.reg[address])
+
+    def LDI(self, address, value):
+        self.reg[address] = value
+
     def run(self):
         """Run the CPU."""
         while True:
@@ -93,12 +101,16 @@ class CPU:
                 # halt
                 break
 
-            elif IR == self.LDI:
-                # write a value to memory
-                self.reg[operand_a] = operand_b
-                self.pc += advance
+            self.branchtable[IR](operand_a, operand_b)
+            self.pc += advance
 
-            elif IR == self.PRN:
-                # print value
-                print(self.reg[operand_a])
-                self.pc += advance
+            # elif IR == self.LDI:
+            #     # write a value to memory
+            #     self.reg[operand_a] = operand_b
+            #     self.pc += advance
+
+            # elif IR == 71:
+            #     # print value
+            #     # print(self.reg[operand_a])
+            #     self.branchtable[IR](operand_a, operand_b)
+            #     self.pc += advance
