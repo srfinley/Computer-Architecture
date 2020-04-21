@@ -18,8 +18,13 @@ class CPU:
         self.branchtable[162] = self.MUL
         
 
-    def load(self, filename):
+    def load(self, argv):
         """Load a program into memory."""
+        try:
+            filename = argv[1]
+        except IndexError:
+            print("Must include a filepath as an argument")
+            sys.exit()
 
         address = 0
 
