@@ -58,27 +58,15 @@ class CPU:
             "INC": lambda: self.reg[reg_a] + 1,
         }
 
-        # THIS SYNTAX WON'T HANDLE CMP PROPERLY YET
+        # HANDLE CMP WITH DEFINED FUNCTION THAT RETURNS ORIGINAL VALUE
         try:
             self.reg[reg_a] = operations[op]()
         except ZeroDivisionError:
             print("Attempt to divide by zero")
             sys.exit()
+        except KeyError:
+            raise Exception(f"Unsupported ALU operation: {op}")
 
-        # if op == "ADD":
-        #     self.reg[reg_a] += self.reg[reg_b]
-        # elif op == "MUL":
-        #     self.reg[reg_a] *= self.reg[reg_b]
-        # elif op == "DIV":
-        #     try:
-        #         self.reg[reg_a] /= self.reg[reg_b]
-        #     except ZeroDivisionError:
-        #         print("Attempt to divide by zero")
-        #         sys.exit()
-        # elif op == "DEC":
-        #     self.reg[reg_a] -= 1
-        # else:
-        #     raise Exception("Unsupported ALU operation")
 
     def trace(self):
         """
@@ -120,10 +108,6 @@ class CPU:
     def HLT(self, *args):
         """Halts the program"""
         sys.exit()
-
-    # def MUL(self, address1, address2):
-    #     """Multiplies values in address1 by that in address2"""
-    #     self.alu("MUL", address1, address2)
 
     def run(self):
         """Run the CPU."""
