@@ -11,9 +11,8 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0
 
-        self.HLT = 1
-
         self.branchtable = {}
+        self.branchtable[1] = self.HLT
         self.branchtable[130] = self.LDI
         self.branchtable[71] = self.PRN
         
@@ -31,7 +30,6 @@ class CPU:
                     if words[0][0] == "1" or words[0][0] == "0":
                         self.ram[address] = int(words[0], 2)
                         address += 1
-            
 
 
     def alu(self, op, reg_a, reg_b):
@@ -80,6 +78,10 @@ class CPU:
         """Function 130, saves value to register address"""
         self.reg[address] = value
 
+    def HLT(self, *args):
+        """Halts the program"""
+        sys.exit()
+
     def run(self):
         """Run the CPU."""
         while True:
@@ -89,13 +91,9 @@ class CPU:
             # pc will advance by that much plus one
             advance = (IR >> 6) + 1
 
-            # if these aren't used, they won't be called
+            # still a lil concerned about assigning a command as an operand
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
-
-            if IR == self.HLT:
-                # halt
-                break
 
             self.branchtable[IR](operand_a, operand_b)
             self.pc += advance
