@@ -15,6 +15,7 @@ class CPU:
         self.branchtable[1] = self.HLT
         self.branchtable[130] = self.LDI
         self.branchtable[71] = self.PRN
+        self.branchtable[162] = self.MUL
         
 
     def load(self, filename):
@@ -37,7 +38,8 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -81,6 +83,10 @@ class CPU:
     def HLT(self, *args):
         """Halts the program"""
         sys.exit()
+
+    def MUL(self, address1, address2):
+        """Multiplies values in address1 by that in address2"""
+        self.alu("MUL", address1, address2)
 
     def run(self):
         """Run the CPU."""
