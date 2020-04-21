@@ -18,26 +18,20 @@ class CPU:
         self.branchtable[71] = self.PRN
         
 
-    def load(self):
+    def load(self, filename):
         """Load a program into memory."""
 
         address = 0
 
-        # For now, we've just hardcoded a program:
-
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # loads the first word in a line if it starts with 1/0
+        with open(filename) as f:
+            for line in f:
+                words = line.split()
+                if len(words) > 0:
+                    if words[0][0] == "1" or words[0][0] == "0":
+                        self.ram[address] = int(words[0], 2)
+                        address += 1
+            
 
 
     def alu(self, op, reg_a, reg_b):
@@ -79,9 +73,11 @@ class CPU:
         self.ram[MAR] = MDR
 
     def PRN(self, address, _):
+        """Function 71, prints value from address"""
         print(self.reg[address])
 
     def LDI(self, address, value):
+        """Function 130, saves value to register address"""
         self.reg[address] = value
 
     def run(self):
@@ -103,14 +99,3 @@ class CPU:
 
             self.branchtable[IR](operand_a, operand_b)
             self.pc += advance
-
-            # elif IR == self.LDI:
-            #     # write a value to memory
-            #     self.reg[operand_a] = operand_b
-            #     self.pc += advance
-
-            # elif IR == 71:
-            #     # print value
-            #     # print(self.reg[operand_a])
-            #     self.branchtable[IR](operand_a, operand_b)
-            #     self.pc += advance
