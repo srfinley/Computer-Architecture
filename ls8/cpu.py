@@ -15,7 +15,14 @@ class CPU:
         self.branchtable[1] = self.HLT
         self.branchtable[130] = self.LDI
         self.branchtable[71] = self.PRN
-        self.branchtable[162] = self.MUL
+
+        self.branchtable[101] = lambda a, b: self.alu('INC', a, b)
+        self.branchtable[102] = lambda a, b: self.alu('DEC', a, b)
+        self.branchtable[160] = lambda a, b: self.alu('ADD', a, b)
+        self.branchtable[161] = lambda a, b: self.alu('SUB', a, b)
+        self.branchtable[162] = lambda a, b: self.alu('MUL', a, b)
+        self.branchtable[163] = lambda a, b: self.alu('DIV', a, b)
+        self.branchtable[164] = lambda a, b: self.alu('MOD', a, b)
         
 
     def load(self, argv):
@@ -41,12 +48,37 @@ class CPU:
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
-        if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
-        elif op == "MUL":
-            self.reg[reg_a] *= self.reg[reg_b]
-        else:
-            raise Exception("Unsupported ALU operation")
+        operations = {
+            "ADD": lambda: self.reg[reg_a] + self.reg[reg_b],
+            "SUB": lambda: self.reg[reg_a] - self.reg[reg_b],
+            "MUL": lambda: self.reg[reg_a] * self.reg[reg_b],
+            "DIV": lambda: self.reg[reg_a] / self.reg[reg_b],
+            "MOD": lambda: self.reg[reg_a] % self.reg[reg_b],
+            "DEC": lambda: self.reg[reg_a] - 1,
+            "INC": lambda: self.reg[reg_a] + 1,
+        }
+
+        # THIS SYNTAX WON'T HANDLE CMP PROPERLY YET
+        try:
+            self.reg[reg_a] = operations[op]()
+        except ZeroDivisionError:
+            print("Attempt to divide by zero")
+            sys.exit()
+
+        # if op == "ADD":
+        #     self.reg[reg_a] += self.reg[reg_b]
+        # elif op == "MUL":
+        #     self.reg[reg_a] *= self.reg[reg_b]
+        # elif op == "DIV":
+        #     try:
+        #         self.reg[reg_a] /= self.reg[reg_b]
+        #     except ZeroDivisionError:
+        #         print("Attempt to divide by zero")
+        #         sys.exit()
+        # elif op == "DEC":
+        #     self.reg[reg_a] -= 1
+        # else:
+        #     raise Exception("Unsupported ALU operation")
 
     def trace(self):
         """
@@ -89,9 +121,9 @@ class CPU:
         """Halts the program"""
         sys.exit()
 
-    def MUL(self, address1, address2):
-        """Multiplies values in address1 by that in address2"""
-        self.alu("MUL", address1, address2)
+    # def MUL(self, address1, address2):
+    #     """Multiplies values in address1 by that in address2"""
+    #     self.alu("MUL", address1, address2)
 
     def run(self):
         """Run the CPU."""
