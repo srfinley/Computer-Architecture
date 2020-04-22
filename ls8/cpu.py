@@ -149,5 +149,7 @@ class CPU:
 
             self.branchtable[IR](operand_a, operand_b)
 
-            # TODO: handle commands that change PC position
-            self.pc += advance
+            # fourth bit is whether the command sets the PC
+            # mask with & to isolate the bit and shift
+            if not ((IR & 0b00010000) >> 4):
+                self.pc += advance
