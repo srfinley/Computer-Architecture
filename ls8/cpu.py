@@ -48,7 +48,7 @@ class CPU:
                 words = line.split()
                 if len(words) > 0:
                     if words[0][0] == "1" or words[0][0] == "0":
-                        self.ram[address] = int(words[0], 2)
+                        self.ram_write(address, int(words[0], 2))
                         address += 1
 
 
@@ -117,10 +117,10 @@ class CPU:
         sys.exit()
 
     def PUSH(self, address, _):
-        """Puts the item in the address on the stack"""
+        """Puts the item from the reg address onto the stack"""
 
         # decrement stack pointer
-        self.reg[self.SP_reg] -= 1
+        self.alu("DEC", self.SP_reg, _)
 
         # add value at address to RAM at the pointed-to place
         self.ram_write(self.reg[self.SP_reg], self.reg[address])
@@ -129,10 +129,10 @@ class CPU:
         """Puts item from top of stack into address"""
         
         # copy the value at the top of the stack to address
-        self.reg[address] = self.ram_read(self.reg[self.SP_reg])
+        self.LDI(address, self.ram_read(self.reg[self.SP_reg]))
 
         # increment stack pointer
-        self.reg[self.SP_reg] += 1
+        self.alu("INC", self.SP_reg, _)
 
     def run(self):
         """Run the CPU."""
