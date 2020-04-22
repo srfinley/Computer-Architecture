@@ -23,6 +23,8 @@ class CPU:
         self.branchtable[69] = self.PUSH
         self.branchtable[70] = self.POP
 
+        self.branchtable[84] = self.JMP
+
         self.branchtable[101] = lambda a, b: self.alu('INC', a, b)
         self.branchtable[102] = lambda a, b: self.alu('DEC', a, b)
         self.branchtable[160] = lambda a, b: self.alu('ADD', a, b)
@@ -133,6 +135,10 @@ class CPU:
 
         # increment stack pointer
         self.alu("INC", self.SP_reg, _)
+
+    def JMP(self, address, _):
+        """Move PC to RAM location stored at reg address"""
+        self.pc = self.reg[address]
 
     def run(self):
         """Run the CPU."""
