@@ -59,7 +59,7 @@ class CPU:
             "ADD": lambda: self.reg[reg_a] + self.reg[reg_b],
             "SUB": lambda: self.reg[reg_a] - self.reg[reg_b],
             "MUL": lambda: self.reg[reg_a] * self.reg[reg_b],
-            "DIV": lambda: self.reg[reg_a] / self.reg[reg_b],
+            "DIV": lambda: self.reg[reg_a] // self.reg[reg_b],
             "MOD": lambda: self.reg[reg_a] % self.reg[reg_b],
             "DEC": lambda: self.reg[reg_a] - 1,
             "INC": lambda: self.reg[reg_a] + 1,
@@ -67,7 +67,7 @@ class CPU:
 
         # HANDLE CMP WITH DEFINED FUNCTION THAT RETURNS ORIGINAL VALUE
         try:
-            self.reg[reg_a] = operations[op]()
+            self.reg[reg_a] = (operations[op]() & 0xFF)
         except ZeroDivisionError:
             print("Attempt to divide by zero")
             sys.exit()
