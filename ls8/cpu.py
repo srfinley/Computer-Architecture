@@ -11,10 +11,17 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0
 
+        # the register R7 points to the top of the stack
+        self.SP_reg = 7
+        self.reg[self.SP_reg] = 244
+
         self.branchtable = {}
         self.branchtable[1] = self.HLT
         self.branchtable[130] = self.LDI
         self.branchtable[71] = self.PRN
+
+        self.branchtable[69] = self.PUSH
+        self.branchtable[70] = self.POP
 
         self.branchtable[101] = lambda a, b: self.alu('INC', a, b)
         self.branchtable[102] = lambda a, b: self.alu('DEC', a, b)
@@ -109,6 +116,24 @@ class CPU:
         """Halts the program"""
         sys.exit()
 
+    def PUSH(self, address, _):
+        """Puts the item in the address on the stack"""
+
+        # decrement stack pointer
+        self.reg[self.SP_reg] -= 1
+
+        # add value at address to RAM at the pointed-to place
+        self.ram_write(self.reg[self.SP_reg], self.reg[address])
+
+    def POP(self, address, _):
+        """Puts item from top of stack into address"""
+        
+        # copy the value at the top of the stack to address
+        self.reg[address] = self.ram_read(self.reg[self.SP_reg])
+
+        # increment stack pointer
+        self.reg[self.SP_reg] += 1
+
     def run(self):
         """Run the CPU."""
         while True:
@@ -123,4 +148,6 @@ class CPU:
             operand_b = self.ram_read(self.pc + 2)
 
             self.branchtable[IR](operand_a, operand_b)
+
+            # TODO: handle commands that change PC position
             self.pc += advance
