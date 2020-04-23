@@ -18,7 +18,9 @@ class CPU:
         self.branchtable = {}
         self.branchtable[1] = self.HLT
         self.branchtable[130] = self.LDI
+
         self.branchtable[71] = self.PRN
+        self.branchtable[72] = self.PRA
 
         self.branchtable[69] = self.PUSH
         self.branchtable[70] = self.POP
@@ -126,6 +128,9 @@ class CPU:
     def PRN(self, address, _):
         """Function 71, prints value from address"""
         print(self.reg[address])
+
+    def PRA(self, address, _):
+        print(chr(self.reg[address]))
 
     def LDI(self, address, value):
         """Function 130, saves value to register address"""
