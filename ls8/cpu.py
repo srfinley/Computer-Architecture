@@ -23,6 +23,9 @@ class CPU:
         self.branchtable[69] = self.PUSH
         self.branchtable[70] = self.POP
 
+        self.branchtable[80] = self.CALL
+        self.branchtable[17] = self.RET
+
         self.branchtable[84] = self.JMP
 
         self.branchtable[101] = lambda a, b: self.alu('INC', a, b)
@@ -130,14 +133,21 @@ class CPU:
         """Halts the program"""
         sys.exit()
 
+    def stack_write(self, value):
+        """Writes the value to the top of the stack"""
+
+        # decrement stack pointer
+        # how to avoid passing in meaningless value for third arg?
+        self.alu("DEC", self.SP_reg, 1)
+
+        # write value to SP location
+        self.ram_write(self.reg[self.SP_reg], value)
+
     def PUSH(self, address, _):
         """Puts the item from the reg address onto the stack"""
 
-        # decrement stack pointer
-        self.alu("DEC", self.SP_reg, _)
-
         # add value at address to RAM at the pointed-to place
-        self.ram_write(self.reg[self.SP_reg], self.reg[address])
+        self.stack_write(self.reg[address])
 
     def POP(self, address, _):
         """Puts item from top of stack into address"""
@@ -151,6 +161,23 @@ class CPU:
     def JMP(self, address, _):
         """Move PC to RAM location stored at reg address"""
         self.pc = self.reg[address]
+
+    def CALL(self, address, _):
+        """Stores current PC address on stack and jumps to address"""
+        # push the location of the next instruction onto stack
+        # (call only has one arg so it's always pc + 2)
+        self.stack_write(self.pc + 2)
+
+        # set pc to the value stored in the reg address
+        self.pc = self.reg[address]
+
+    def RET(self, *args):
+        """Moves PC to address stored at top of stack"""
+
+        # this replicates some POP code :\
+        self.pc = self.ram_read(self.reg[self.SP_reg])
+
+        self.alu("INC", self.SP_reg, 1)
 
     def run(self):
         """Run the CPU."""
