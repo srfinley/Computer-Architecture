@@ -32,6 +32,12 @@ class CPU:
         self.branchtable[162] = lambda a, b: self.alu('MUL', a, b)
         self.branchtable[163] = lambda a, b: self.alu('DIV', a, b)
         self.branchtable[164] = lambda a, b: self.alu('MOD', a, b)
+
+        self.branchtable[168] = lambda a, b: self.alu('AND', a, b)
+        self.branchtable[170] = lambda a, b: self.alu('OR', a, b)
+        self.branchtable[171] = lambda a, b: self.alu('XOR', a, b)
+        self.branchtable[172] = lambda a, b: self.alu('SHL', a, b)
+        self.branchtable[173] = lambda a, b: self.alu('SHR', a, b)
         
 
     def load(self, argv):
@@ -65,6 +71,12 @@ class CPU:
             "MOD": lambda: self.reg[reg_a] % self.reg[reg_b],
             "DEC": lambda: self.reg[reg_a] - 1,
             "INC": lambda: self.reg[reg_a] + 1,
+
+            "AND": lambda: self.reg[reg_a] & self.reg[reg_b],
+            "OR": lambda: self.reg[reg_a] | self.reg[reg_b],
+            "XOR": lambda: self.reg[reg_a] ^ self.reg[reg_b],
+            "SHL": lambda: self.reg[reg_a] << self.reg[reg_b],
+            "SHR": lambda: self.reg[reg_a] >> self.reg[reg_b],
         }
 
         # HANDLE CMP WITH DEFINED FUNCTION THAT RETURNS ORIGINAL VALUE
