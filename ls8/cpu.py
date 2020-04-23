@@ -36,6 +36,7 @@ class CPU:
         self.branchtable[163] = lambda a, b: self.alu('DIV', a, b)
         self.branchtable[164] = lambda a, b: self.alu('MOD', a, b)
 
+        self.branchtable[105] = lambda a, b: self.alu('NOT', a, b)
         self.branchtable[168] = lambda a, b: self.alu('AND', a, b)
         self.branchtable[170] = lambda a, b: self.alu('OR', a, b)
         self.branchtable[171] = lambda a, b: self.alu('XOR', a, b)
@@ -75,6 +76,7 @@ class CPU:
             "DEC": lambda: self.reg[reg_a] - 1,
             "INC": lambda: self.reg[reg_a] + 1,
 
+            "NOT": lambda: self.reg[reg_a] ^ 0xFF,
             "AND": lambda: self.reg[reg_a] & self.reg[reg_b],
             "OR": lambda: self.reg[reg_a] | self.reg[reg_b],
             "XOR": lambda: self.reg[reg_a] ^ self.reg[reg_b],
@@ -143,6 +145,18 @@ class CPU:
         # write value to SP location
         self.ram_write(self.reg[self.SP_reg], value)
 
+    def stack_read(self):
+        """Returns value from top of stack"""
+
+        # grabs value
+        pop = self.ram_read(self.reg[self.SP_reg])
+
+        # increments SP
+        self.alu("INC", self.SP_reg, 1)
+
+        # returns value
+        return pop
+
     def PUSH(self, address, _):
         """Puts the item from the reg address onto the stack"""
 
@@ -153,10 +167,7 @@ class CPU:
         """Puts item from top of stack into address"""
         
         # copy the value at the top of the stack to address
-        self.LDI(address, self.ram_read(self.reg[self.SP_reg]))
-
-        # increment stack pointer
-        self.alu("INC", self.SP_reg, _)
+        self.LDI(address, self.stack_read())
 
     def JMP(self, address, _):
         """Move PC to RAM location stored at reg address"""
@@ -173,11 +184,7 @@ class CPU:
 
     def RET(self, *args):
         """Moves PC to address stored at top of stack"""
-
-        # this replicates some POP code :\
-        self.pc = self.ram_read(self.reg[self.SP_reg])
-
-        self.alu("INC", self.SP_reg, 1)
+        self.pc = self.stack_read()
 
     def run(self):
         """Run the CPU."""
