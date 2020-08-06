@@ -65,6 +65,12 @@ but you'll have to implement those three above instructions first!
 * Read this whole file.
 * Skim the spec.
 
+ls8.py: runs a specified program on a LambdaSchool-8 computer emulation
+cpu.py: an emulator for an 8-bit computer
+- constructor is empty
+- load function is placeholder
+- run function is empty
+
 ## Step 1: Add the constructor to `cpu.py`
 
 Add list properties to the `CPU` class to hold 256 bytes of memory and 8

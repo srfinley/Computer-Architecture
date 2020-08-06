@@ -7,38 +7,94 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.pc = 0
 
-    def load(self):
+        # the register R7 points to the top of the stack
+        self.SP_reg = 7
+        self.reg[self.SP_reg] = 244
+
+        self.branchtable = {}
+        self.branchtable[1] = self.HLT
+        self.branchtable[130] = self.LDI
+
+        self.branchtable[71] = self.PRN
+        self.branchtable[72] = self.PRA
+
+        self.branchtable[69] = self.PUSH
+        self.branchtable[70] = self.POP
+
+        self.branchtable[80] = self.CALL
+        self.branchtable[17] = self.RET
+
+        self.branchtable[84] = self.JMP
+
+        self.branchtable[101] = lambda a, b: self.alu('INC', a, b)
+        self.branchtable[102] = lambda a, b: self.alu('DEC', a, b)
+        self.branchtable[160] = lambda a, b: self.alu('ADD', a, b)
+        self.branchtable[161] = lambda a, b: self.alu('SUB', a, b)
+        self.branchtable[162] = lambda a, b: self.alu('MUL', a, b)
+        self.branchtable[163] = lambda a, b: self.alu('DIV', a, b)
+        self.branchtable[164] = lambda a, b: self.alu('MOD', a, b)
+
+        self.branchtable[105] = lambda a, b: self.alu('NOT', a, b)
+        self.branchtable[168] = lambda a, b: self.alu('AND', a, b)
+        self.branchtable[170] = lambda a, b: self.alu('OR', a, b)
+        self.branchtable[171] = lambda a, b: self.alu('XOR', a, b)
+        self.branchtable[172] = lambda a, b: self.alu('SHL', a, b)
+        self.branchtable[173] = lambda a, b: self.alu('SHR', a, b)
+        
+
+    def load(self, argv):
         """Load a program into memory."""
+        try:
+            filename = argv[1]
+        except IndexError:
+            print("Must include a filepath as an argument")
+            sys.exit()
 
         address = 0
 
-        # For now, we've just hardcoded a program:
-
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # loads the first word in a line if it starts with 1/0
+        with open(filename) as f:
+            for line in f:
+                words = line.split()
+                if len(words) > 0:
+                    if words[0][0] == "1" or words[0][0] == "0":
+                        self.ram_write(address, int(words[0], 2))
+                        address += 1
 
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
-        if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
-        else:
-            raise Exception("Unsupported ALU operation")
+        operations = {
+            "ADD": lambda: self.reg[reg_a] + self.reg[reg_b],
+            "SUB": lambda: self.reg[reg_a] - self.reg[reg_b],
+            "MUL": lambda: self.reg[reg_a] * self.reg[reg_b],
+            "DIV": lambda: self.reg[reg_a] // self.reg[reg_b],
+            "MOD": lambda: self.reg[reg_a] % self.reg[reg_b],
+            "DEC": lambda: self.reg[reg_a] - 1,
+            "INC": lambda: self.reg[reg_a] + 1,
+
+            "NOT": lambda: self.reg[reg_a] ^ 0xFF,
+            "AND": lambda: self.reg[reg_a] & self.reg[reg_b],
+            "OR": lambda: self.reg[reg_a] | self.reg[reg_b],
+            "XOR": lambda: self.reg[reg_a] ^ self.reg[reg_b],
+            "SHL": lambda: self.reg[reg_a] << self.reg[reg_b],
+            "SHR": lambda: self.reg[reg_a] >> self.reg[reg_b],
+        }
+
+        # HANDLE CMP WITH DEFINED FUNCTION THAT RETURNS ORIGINAL VALUE
+        try:
+            self.reg[reg_a] = (operations[op]() & 0xFF)
+        except ZeroDivisionError:
+            print("Attempt to divide by zero")
+            sys.exit()
+        except KeyError:
+            raise Exception(f"Unsupported ALU operation: {op}")
+
 
     def trace(self):
         """
@@ -60,6 +116,97 @@ class CPU:
 
         print()
 
+    def ram_read(self, MAR):
+        """Returns the value stored at the Memory Address Register"""
+        MDR = self.ram[MAR]
+        return MDR
+
+    def ram_write(self, MAR, MDR):
+        """Writes the Memory Data Register to the Memory Address Register"""
+        self.ram[MAR] = MDR
+
+    def PRN(self, address, _):
+        """Function 71, prints value from address"""
+        print(self.reg[address])
+
+    def PRA(self, address, _):
+        print(chr(self.reg[address]))
+
+    def LDI(self, address, value):
+        """Function 130, saves value to register address"""
+        self.reg[address] = value
+
+    def HLT(self, *args):
+        """Halts the program"""
+        sys.exit()
+
+    def stack_write(self, value):
+        """Writes the value to the top of the stack"""
+
+        # decrement stack pointer
+        # how to avoid passing in meaningless value for third arg?
+        self.alu("DEC", self.SP_reg, 1)
+
+        # write value to SP location
+        self.ram_write(self.reg[self.SP_reg], value)
+
+    def stack_read(self):
+        """Returns value from top of stack"""
+
+        # grabs value
+        pop = self.ram_read(self.reg[self.SP_reg])
+
+        # increments SP
+        self.alu("INC", self.SP_reg, 1)
+
+        # returns value
+        return pop
+
+    def PUSH(self, address, _):
+        """Puts the item from the reg address onto the stack"""
+
+        # add value at address to RAM at the pointed-to place
+        self.stack_write(self.reg[address])
+
+    def POP(self, address, _):
+        """Puts item from top of stack into address"""
+        
+        # copy the value at the top of the stack to address
+        self.LDI(address, self.stack_read())
+
+    def JMP(self, address, _):
+        """Move PC to RAM location stored at reg address"""
+        self.pc = self.reg[address]
+
+    def CALL(self, address, _):
+        """Stores current PC address on stack and jumps to address"""
+        # push the location of the next instruction onto stack
+        # (call only has one arg so it's always pc + 2)
+        self.stack_write(self.pc + 2)
+
+        # set pc to the value stored in the reg address
+        self.pc = self.reg[address]
+
+    def RET(self, *args):
+        """Moves PC to address stored at top of stack"""
+        self.pc = self.stack_read()
+
     def run(self):
         """Run the CPU."""
-        pass
+        while True:
+            IR = self.ram_read(self.pc)
+
+            # first two bits are the number of args
+            # pc will advance by that much plus one
+            advance = (IR >> 6) + 1
+
+            # still a lil concerned about assigning a command as an operand
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+
+            self.branchtable[IR](operand_a, operand_b)
+
+            # fourth bit is whether the command sets the PC
+            # mask with & to isolate the bit and shift
+            if not ((IR & 0b00010000) >> 4):
+                self.pc += advance
